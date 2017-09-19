@@ -4,7 +4,7 @@ analysis
 node_modules
 bower_components
 phantomjs.exe
-docs
+#docs
 jsdoc-template
 test/sandbox.html
 
