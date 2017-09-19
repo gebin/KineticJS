@@ -18,64 +18,135 @@
 <script>
     var scale = 1;
     var stage;
-    var layer;
-    var min_scale = 0.1;
-    $(document).ready(function(){
+    var layer,layerBtn;
+    var min_scale = 1;
+    var backgroundImage;
 
+    var images = ["https://ssl-img.che300.com/inception_img/PHOTO_1505726162522.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726178935.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726189382.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726251541.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726266533.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726208865.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726200944.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726237885.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726213437.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726204529.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726245165.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726220454.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726241329.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726223946.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726255194.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726228575.jpg","https://ssl-img.che300.com/inception_img/PHOTO_1505726233017.jpg"];
+
+    var pos = 0;
+    var currentImage ,
+        nextImage,
+        prevImage;
+
+    $(document).ready(function(){
         stage = new Kinetic.Stage({
             container: 'container',
             width: 600,
             height: 400,
-            draggable:true
+            x:300,
+            y:200
         });
 
-        layer = new Kinetic.Layer();
-
-        var rect = new Kinetic.Rect({
-            x: 239,
-            y: 75,
-            width: 100,
-            height: 50,
-            fill: 'green',
-            stroke: 'black',
-            strokeWidth: 4
+        layer = new Kinetic.Layer({
+            draggable:true, 
+        });
+        layerBtn = new Kinetic.Layer();
+ 
+        var rotateBtn = createImageNoLoad({
+            layer : layerBtn,
+            config : {
+                x: 250,
+                y: 150,
+                width: 50,
+                height: 50,
+            },
+            src : 'https://ssl-assets.che300.com/cdn/image/rotate.png'
         });
 
-        var circle = new Kinetic.Circle({
-            x: 300,
-            y: 260,
-            radius: 70,
-            fill: 'red',
-            stroke: 'black',
-            strokeWidth: 4
+        var turnLeftBtn = createImageNoLoad({
+            layer : layerBtn,
+            config : {
+                x: -290,
+                y: -30,
+                width: 60,
+                height: 60,
+            },
+            src : 'https://ssl-assets.che300.com/cdn/image/image_arrow_left.png'
         });
 
-        var hexagon = new Kinetic.RegularPolygon({
-            x: stage.getWidth() / 2,
-            y: 200,
-            sides: 6,
-            radius: 70,
-            fill: 'aqua',
-            stroke: 'black',
-            strokeWidth: 4
+        var turnRightBtn = createImageNoLoad({
+            layer : layerBtn,
+            config : {
+                x: 230,
+                y: -30,
+                width: 60,
+                height: 60,
+            },
+            src : 'https://ssl-assets.che300.com/cdn/image/image_arrow_right.png'
+        });
+ 
+        turnLeftBtn.on('mousedown', function() {
+            nextImage = currentImage;
+            currentImage = new Image();
+            if(prevImage){
+                currentImage = createPureImage({
+                    src :prevImage.src,
+                    layer : layer
+                });
+            } else {
+                currentImage = createPureImage({
+                    src :pos ? images[pos-1] : images[images.length-1],
+                    layer : layer
+                });
+            }
+            backgroundImage.setImage(currentImage);
+            prevImage = new Image();
+            if(pos){
+                prevImage.src = images[--pos]; 
+            } else {
+                pos = images.length-1;
+                prevImage.src = images[pos];
+            }
         });
 
-        circle.on('mousedown', function() {
-            // console.log('click')
-            // 
+        turnRightBtn.on('mousedown', function() {
+            prevImage = currentImage; 
+            if(nextImage){
+                currentImage = createPureImage({
+                    src :nextImage.src,
+                    layer : layer
+                });
+            } else {
+                currentImage = createPureImage({
+                    src :pos == images.length-1 ? images[0] : images[pos+1],
+                    layer : layer
+                }); 
+            }
+            backgroundImage.setImage(currentImage);
+            nextImage = new Image();
+            if(pos == images.length-1){
+                pos = 0;
+                nextImage.src = images[pos];
+            } else {
+                nextImage.src = images[++pos];
+            }
         });
 
-        createImage();
+        rotateBtn.on('mousedown', function() {
+            layer.rotateDeg(90);
+            layer.draw();
+        });
 
-        // add the shape to the layer
-        layer.add(hexagon);
-        // add the shape to the layer
-        layer.add(circle);
-        // add the shape to the layer
-        layer.add(rect);
+        backgroundImage = initBackgroundImage({
+            layer : layer,
+            config : {
+                x: -300,
+                y: -200,
+                width: 600,
+                height: 400,
+            },
+            src : images[pos]
+        }); 
+ 
+        // add the btn to the layer
+        layerBtn.add(turnLeftBtn);
+        layerBtn.add(turnRightBtn);
+        layerBtn.add(rotateBtn);
 
         // add the layer to the stage
         stage.add(layer);
+        stage.add(layerBtn);
         /* ZOOM AND PAN CODE */
         // add event listener //
         $('#graph').bind('mousewheel MozMousePixelScroll', function(event, delta, deltaX, deltaY){
@@ -84,43 +155,57 @@
         });
     });
 
-    function createImage(){
-        var imageObj = new Image();
-        imageObj.onload = function() {
-            var yoda = new Kinetic.Image({
-                x: 0,
-                y: 0,
-                image: imageObj,
-                width: 600,
-                height: 400
-            });
+    function initThumbnails(){
+        
+    }
+
+    function initBackgroundImage(params){
+        var image = new Image(),
+            kineticImage;
+        image.onload = function() {
+            backgroundImage = new Kinetic.Image($.extend(params.config,{
+                image:image
+            }));
+
+            currentImage = backgroundImage.getImage();
+            nextImage = new Image();
+            nextImage.src = images[pos+1];
+
             // add the shape to the layer
-            layer.add(yoda); 
-            // add the layer to the stage
-            yoda.moveToBottom();
-            layer.draw();
-            
-      };
-      imageObj.src = 'https://ssl-img.che300.com/inception_img/left_front_45518407306.395002.jpg';
+            params.layer.add(backgroundImage);
+            params.layer.draw();
+        };
+        image.src = params.src;
+        return kineticImage;
     }
 
-    function rotate(angle){ // 90 or -90
-        // if(stage.getHeight() <= image.getWidth()){ 
-        //     aspect = image.getWidth() / image.getHeight();
-        //     height = stage.getHeight() / aspect;
-        //     image.setWidth(stage.getHeight());
-        //     image.setHeight(height);
-        // }
-        // image.setOffset(image.getWidth()/2,image.getHeight()/2);
-        // image.setPosition(stage.getWidth()/2,stage.getHeight()/2);
-        image.rotateDeg(angle);
-        layer.draw();
+    function createImageNoLoad(params){
+        var image = new Image(),
+            kineticImage;
+
+        image.src = params.src;
+        kineticImage = new Kinetic.Image($.extend(params.config,{
+            image:image
+        }));
+        // add the shape to the layer
+        params.layer.add(kineticImage);
+
+        image.onload = function() { 
+            params.layer.draw();
+        };
+        return kineticImage;
     }
 
-
-
+    function createPureImage(params){
+        var image = new Image() 
+        image.src = params.src;   
+        image.onload = function() { 
+            params.layer.draw();
+        };
+        return image;
+    }
+    
     function onMouseWheel(e, delta,dx,dy) {
-
         // mozilla fix...
         if (e.originalEvent.detail){
             delta = e.originalEvent.detail;
