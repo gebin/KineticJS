@@ -6,15 +6,32 @@
             margin: 0px;
             padding: 0px;
         }
+
+        #title-board {
+            width: 600px;
+            height: 270px;
+        }
+        #title-board .drawing-board-canvas-wrapper {
+            border: none;
+            margin: 0;
+        }
+
     </style>
+    <link rel="stylesheet" href="./drawingboard.min.css">
 </head>
 <body>
 <div id="bg"></div>
 <section id="graph">
     <div id="container"></div>
 </section>
+
+<div class="board" id="title-board">
+    
+</div>
+
 <script src="https://cdn.bootcss.com/jquery/1.12.0/jquery.js"></script>
 <script src="https://cdn.bootcss.com/kineticjs/4.7.2/kinetic.min.js"></script>
+<script src="drawingboard.js"></script>
 <script>
     var scale = 1;
     var stage;
@@ -47,6 +64,17 @@
             layer : layerBtn,
             config : {
                 x: 250,
+                y: 150,
+                width: 50,
+                height: 50,
+            },
+            src : 'https://ssl-assets.che300.com/cdn/image/rotate.png'
+        });
+
+        var editBtn = createImageNoLoad({
+            layer : layerBtn,
+            config : {
+                x: -300,
                 y: 150,
                 width: 50,
                 height: 50,
@@ -128,6 +156,25 @@
             layer.draw();
         });
 
+        editBtn.on('mousedown', function() { 
+            var customBoard = new DrawingBoard.Board('title-board', {
+                background: images[pos],
+                // background: 'http://fezz.guchele.com/demos/date/demo1/example/mobile-select-date.jpg',
+                color: "#ff0",
+                size: 5,
+                fillTolerance: 150,
+                controls: [
+                    { Size: { type: "range", min: 12, max: 42 } },
+                    { Navigation: { back: false, forward: false } },
+                    'DrawingMode'
+                ],
+                stretchImg : true,
+                webStorage: false,
+                droppable: true //try dropping an image on the canvas!
+            });
+            // customBoard.addControl('Download'); //if the DrawingBoard.Control.Download class exists
+        });
+
         backgroundImage = initBackgroundImage({
             layer : layer,
             config : {
@@ -143,6 +190,7 @@
         layerBtn.add(turnLeftBtn);
         layerBtn.add(turnRightBtn);
         layerBtn.add(rotateBtn);
+        layerBtn.add(editBtn);
 
         // add the layer to the stage
         stage.add(layer);
@@ -156,12 +204,15 @@
     });
 
     function initThumbnails(){
-        
+        // 
     }
 
     function initBackgroundImage(params){
         var image = new Image(),
             kineticImage;
+
+        image.setAttribute('crossOrigin', '*');
+
         image.onload = function() {
             backgroundImage = new Kinetic.Image($.extend(params.config,{
                 image:image
@@ -182,6 +233,7 @@
     function createImageNoLoad(params){
         var image = new Image(),
             kineticImage;
+        image.setAttribute('crossOrigin', '*');
 
         image.src = params.src;
         kineticImage = new Kinetic.Image($.extend(params.config,{
@@ -198,6 +250,7 @@
 
     function createPureImage(params){
         var image = new Image() 
+        image.setAttribute('crossOrigin', '*');
         image.src = params.src;   
         image.onload = function() { 
             params.layer.draw();
